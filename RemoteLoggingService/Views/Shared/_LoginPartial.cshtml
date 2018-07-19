@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using RemoteLoggingService.Models
+
+
+
+@if (User.Identity.IsAuthenticated)
+{
+    
+        <ul class="nav navbar-nav navbar-right">
+            <li>
+                <a>@User.Identity.Name</a>
+            </li>
+            <li>
+                <a href="~/Account/Logout">Log out</a>
+            </li>
+        </ul>
+    
+}
+else
+{
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="~/Account/Register">Register</a></li>
+            <li><a href="~/Account/Login">Log in</a></li>            
+        </ul>
+}

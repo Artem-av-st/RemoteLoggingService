@@ -1,0 +1,25 @@
+﻿@model RemoteLoggingService.Models.Client
+
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<h3>Are you sure you want to delete this Client?</h3>
+<h2 style="color:red">WARNING! All client logs will be deleted!</h2>
+<div>
+    
+    <hr />
+    <div class="editor-field">  
+        @Html.Label("Client")
+        @Html.DisplayFor(model => model.User.Name)        
+    </div>
+    <br/>
+    @using (@Html.BeginForm("Delete", "Clients", FormMethod.Post))
+    {
+        <input type="hidden" asp-for="ClientId" />
+        <input type="submit" value="Delete" class="btn btn-default" />
+        @Html.ActionLink("Back to list", "Index", "Clients")
+    }
+</div>

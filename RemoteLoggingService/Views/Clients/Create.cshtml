@@ -1,0 +1,46 @@
+﻿@model RemoteLoggingService.Models.Client
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Create Develpoperslist
+    var develpopersList = new List<SelectListItem>();
+    if (ViewBag.Developers != null)
+    {
+        foreach (var developer in ViewBag.Developers)
+        {
+            develpopersList.Add(new SelectListItem() { Text = developer.Name.ToString(), Value = developer.UserId });
+        }
+
+    }
+}
+
+
+<h2>Create client</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        @using (@Html.BeginForm("Create", "Clients", FormMethod.Post))
+        {      
+            <div class="editor-field">
+                @Html.Label("Select developer")
+                @Html.DropDownList("developerGuid", develpopersList)
+            </div>
+
+            <div class="editor-field">
+                @Html.Label("New user name")
+                @Html.Editor("clientName")
+                @Html.ValidationMessageFor(model => model.Developer)
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        }
+    </div>
+</div>
+
+<div>
+    @Html.ActionLink("Back to list", "Index", "Clients")
+</div>
+

@@ -1,0 +1,10 @@
+﻿@using System.Security.Claims
+
+
+
+@if (User.Identity.IsAuthenticated && User.FindFirst(x => x.Type == ClaimsIdentity.DefaultRoleClaimType).Value == "Admin")
+{
+    <li>
+        <a href="~/Users/Index">Users</a>
+    </li>
+}

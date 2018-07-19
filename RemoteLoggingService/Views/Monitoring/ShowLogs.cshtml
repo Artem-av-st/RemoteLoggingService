@@ -1,0 +1,121 @@
+﻿@model List<RemoteLoggingService.Models.Log>
+@{
+    ViewData["Title"] = "Logs";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    tr.head {
+        background: #EEE;
+    }
+
+    tr.Warning {
+        color: darkgoldenrod;
+    }
+
+    tr.Error {
+        color: red;
+    }
+
+    tr.Debug {
+        color: lightslategrey;
+    }
+
+    tr.Message {
+        color: blue;
+    }
+
+    tr.Fatal {
+        background-color: red;
+    }
+
+    table.mytable td {
+        padding: 5px;
+        border: 1px solid #AAA;
+    }
+
+    tr.head {
+        background: #EEE;
+    }
+</style>
+@if (@ViewBag.ClientName != null)
+{   
+    <h2>@ViewBag.ClientName</h2>
+}
+@Html.ActionLink("Export to CSV", "SaveToFile", "Monitoring")
+
+<script>    
+    var order = { "ordered": true, "className": "" }
+    function RenderTable() {
+        this.Render = function (logs) {
+            
+            var html =
+                '<table class="mytable">' +
+                '<tbody valign="middle">' +
+                '<tr class="head">' +
+                '<td class="table-header-id"></td>' +
+                '<td class="table-header-date">Date</td>' +
+                '<td class="table-header-status">Status</td>' +
+                '<td>Message</td>' +
+                '</tr>';
+            
+            for (var i = 1; i <= logs.length; i++) {
+                var log = logs[i-1];
+                html +=
+                    '<tr class=' + log.status + '>' +
+                    '<td>' + i + '</td>' +
+                    '<td>' + log.time.replace('T',' ') + '</td>' +
+                    '<td>' + log.status + '</td>' +
+                    '<td>' + log.message + '</td>' +
+                    '</tr>';
+
+            }
+            html +=
+                '</tbody>' +
+                '</table >';
+            
+            document.getElementById('main-table').innerHTML = html;
+        }
+    }
+
+</script>
+<div id="main-table">
+    <table class="mytable">
+        <tbody valign="middle">
+
+            <tr class="head">
+                <td class="table-header-id"></td>
+                <td class="table-header-date">Date</td>
+                <td class="table-header-status">Status</td>
+                <td>Message</td>
+                <td>Metadata</td>
+            </tr>
+            @{
+                var index = 1;
+                foreach (var log in Model)
+                {
+                    <tr class=@log.Status.ToString()>
+                        <td>@index</td>
+                        <td>@log.Time</td>
+                        <td>@log.Status</td>
+                        <td>@log.Message</td>
+                        <td>@log.Metadata</td>
+                    </tr>
+                    index++;
+                }
+            }
+
+        </tbody>
+    </table>
+</div>
+<div>
+    @Html.ActionLink("Back", "Index", "Monitoring")
+    @if (Model.Count > 0)
+    {
+        <div>@Html.ActionLink("Delete all messages", "Delete", "Monitoring", new { id = Model[0].ClientGuid })</div>
+    }
+</div>
+
+
+
+

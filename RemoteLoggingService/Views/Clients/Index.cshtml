@@ -1,0 +1,46 @@
+﻿@model IEnumerable<RemoteLoggingService.Models.Client>
+
+@{
+    ViewData["Title"] = "Clients";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<p>
+    @Html.ActionLink("Create New", "Create", "Clients") 
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.Label("Client")
+            </th>
+            <th>
+                @Html.Label("Client GUID")
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Developer)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Developer.Name)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", "Clients", new { id = @item.ClientId }) |
+                @Html.ActionLink("Delete", "Delete", "Clients", new { id = @item.ClientId })
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

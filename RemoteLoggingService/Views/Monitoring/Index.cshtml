@@ -1,0 +1,104 @@
+﻿@model RemoteLoggingService.ViewModels.GetLogsModel
+@using System.Linq
+@{
+    ViewData["Title"] = "View";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    // Create Clients list
+    var clientsList = new List<SelectListItem>();
+    if (ViewBag.Clients != null)
+    {
+        foreach (var client in ViewBag.Clients)
+        {
+            clientsList.Add(new SelectListItem() { Text = client.User.ToString() });
+        }
+    }
+
+    // Create Log message statuses list
+    var statusesList = new List<SelectListItem>();
+    var statusValues = Enum.GetValues(typeof(RemoteLoggingService.ViewModels.GetLogsModel.LogStatus));
+    foreach(var status in statusValues)
+    {
+        statusesList.Add(new SelectListItem() { Text = status.ToString() });
+
+    }
+
+    // Set "Any" value as default
+    var anyStatus = statusesList.FirstOrDefault(x => x.Text == "Any");
+    anyStatus.Selected = true;
+}
+@using (@Html.BeginForm("ShowLogs", "Monitoring", FormMethod.Get))
+{
+
+    <div>
+        <!-- Client name -->
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ClientName)
+        </div>
+        <div>
+            @Html.DropDownListFor(model => model.ClientName, clientsList)
+        </div>
+
+        <!-- Date from -->
+        <div class="editor-label">
+            @Html.LabelFor(model => model.FromDate)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.FromDate)
+            @Html.ValidationMessageFor(model => model.FromDate)
+        </div>
+
+        <!-- Date To -->
+        <div class="editor-label">
+            @Html.LabelFor(model => model.ToDate)
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.ToDate)
+            
+            @Html.ValidationMessageFor(model => model.ToDate)
+        </div>
+
+        <!-- Log Type -->
+        <div class="editor-label">
+            @Html.LabelFor(model => model.LogType)
+        </div>
+        <div class="editor-field">
+            @Html.DropDownListFor(model => model.LogType, statusesList)
+           
+        </div>
+
+        <!-- Log Type -->
+        <div class="editor-label">
+            @Html.LabelFor(model => model.FindText)
+        </div>
+        <div class="editor-field">
+            @Html.TextBoxFor(model => model.FindText)
+           
+        </div>
+
+        <div class="form-group">
+            <input type="submit" value="See logs" class="btn" />
+        </div>
+    </div>
+    @section Scripts{ 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.14.1/moment.min.js"></script>
+        <script>
+            // Get dates
+            var today = moment().format("YYYY-MM-DDTHH:mm");    
+            var mounthAgo = moment().add(-30, 'days').format("YYYY-MM-DD");            
+            
+            // Set default ToDate as today
+            var dateTo = document.getElementById("ToDate");
+            dateTo.value = today;
+
+            // Set default FromDate as mounth ago
+            var dateFrom = document.getElementById("FromDate");        
+            dateFrom.value = mounthAgo+"T00:00";
+
+        </script>
+    }
+
+
+}

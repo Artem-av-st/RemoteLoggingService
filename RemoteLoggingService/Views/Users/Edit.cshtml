@@ -1,0 +1,76 @@
+﻿@model RemoteLoggingService.Models.User
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Create User roles list
+    var userRoles = new List<SelectListItem>();
+    if (ViewBag.Roles != null)
+    {
+        foreach (var role in ViewBag.Roles)
+        {
+            userRoles.Add(new SelectListItem() { Text = role.Name, Value = role.Id.ToString() });
+        }
+
+    }
+}
+
+<h2>Edit user</h2>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        @using (@Html.BeginForm("Edit", "Users", FormMethod.Post))
+        {
+            // Hidden fields
+            @Html.HiddenFor(model => model.UserId)
+           
+            @Html.HiddenFor(model => model.Password)
+            
+            // User name
+            <div class="editor-label">
+                @Html.LabelFor(model => model.Name)
+            </div>
+            <div class="editor-field">
+                @Html.TextBoxFor(model => model.Name, new { style = "width:400px" })
+                @Html.ValidationMessageFor(model => model.Name)
+            </div>
+
+            // Email
+            <div class="editor-label">
+                @Html.LabelFor(model => model.Email)
+            </div>
+            <div class="editor-field">
+                @Html.TextBoxFor(model => model.Email, new { style = "width:400px" })
+                @Html.ValidationMessageFor(model => model.Email)
+            </div>
+
+            // Role
+            <div class="editor-label">
+                @Html.Label("User role")
+            </div>
+            <div class="editor-field">
+                @Html.DropDownListFor(model => model.RoleId, userRoles)                
+            </div>
+
+            // Is approved
+            <div class="editor-label">
+                @Html.LabelFor(model => model.IsApproved)
+            </div>
+            <div class="editor-field">
+                @Html.EditorFor(model => model.IsApproved)
+                @Html.ValidationMessageFor(model => model.IsApproved)
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        }
+    </div>
+</div>
+
+<div>
+    @Html.ActionLink("Back to list", "Index", "Users")    
+</div>
+
