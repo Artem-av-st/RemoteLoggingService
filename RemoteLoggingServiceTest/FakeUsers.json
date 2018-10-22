@@ -1,0 +1,28 @@
+[
+  {
+    "userId": "B1842F30-447D-490E-ADFE-00639442F33E",
+    "email": "artem-av-st@yandex.ru",
+    "password": "53WnhwonBgnJK/ES1sH1rf9OgKbITPYW5tz+L1K7al2NVH0U",
+    "name": "Artem Yakutin",
+    "isApproved": true,
+    "roleId": 3,
+    "userRole": {
+      "id": 3,
+      "name": "Administrator",
+      "users": []
+    }
+  },
+  {
+    "userId": "092c8124-491b-432b-b879-864190515360",
+    "email": "ivan-av-st@yandex.ru",
+    "password": null,
+    "name": "Ivan Ivanov",
+    "isApproved": true,
+    "roleId": 3,
+    "userRole": {
+      "id": 3,
+      "name": "Developer",
+      "users": []
+    }
+  }
+]

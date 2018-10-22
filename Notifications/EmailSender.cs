@@ -4,7 +4,8 @@ using System.IO;
 using System.Net;
 using System.Net.Mail;
 
-namespace AusCommonLibraries.Notifications
+
+namespace RemoteLoggingService.Notifications
 {
     /// <summary>
     /// Class that used for email sending
@@ -32,7 +33,7 @@ namespace AusCommonLibraries.Notifications
             this.password = password;
             this.isSslEnabled = isSslEnabled;
             Log = string.Empty;
-        }        
+        }
 
         /// <summary>
         /// Configuration of email using incoming parameters
@@ -59,7 +60,7 @@ namespace AusCommonLibraries.Notifications
             {
                 throw new Exception($"Configuration failed: ${exc.Message}.");
             }
-        }       
+        }
 
         /// <summary>
         /// Sends email using configuration. You should configure settings before.
@@ -68,7 +69,7 @@ namespace AusCommonLibraries.Notifications
         {
             try
             {
-                Log  += "Sending was started \n";
+                Log += "Sending was started \n";
                 if (Client == null)
                     throw new Exception("SMTP client was not configured.");
                 if (Message == null)
