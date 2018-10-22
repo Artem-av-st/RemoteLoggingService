@@ -14,7 +14,7 @@
     <br />
     @using (@Html.BeginForm("Delete", "Monitoring", FormMethod.Post))
     {
-        @Html.HiddenFor(model => model.UserId)
+        @Html.HiddenFor(model => model.Id)
         <input type="submit" value="Delete" class="btn btn-default" />
         @Html.ActionLink("Back to main", "Index", "Monitoring")
     }

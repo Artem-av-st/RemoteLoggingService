@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace RemoteLoggingService.Services
 {
-    internal class Captcha
+    public class Captcha
     {
 
         public static bool CheckCaptcha(HttpRequest request)

@@ -1,9 +1,10 @@
 ﻿using RemoteLoggingService.Models;
+using System.Threading.Tasks;
 
 namespace RemoteLoggingService.BL.Interfaces
 {
     interface INotificationSender
     {
-        bool Notify(Log message, AppDbContext dbContext);
+        Task<bool> Notify(Log message, IRepository dbContext);
     }
 }

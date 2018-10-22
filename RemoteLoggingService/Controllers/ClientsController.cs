@@ -9,105 +9,91 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RemoteLoggingService.Models;
 using RemoteLoggingService.Services;
+using RemoteLoggingService.ViewModels;
 
 namespace RemoteLoggingService.Controllers
 {
     [Authorize]
+    [Route("api")]
     public class ClientsController : Controller
-    {
-        private readonly AppDbContext db;
+    {        
+        private readonly IRepository db;
 
-        public ClientsController(AppDbContext context)
+        public ClientsController(IRepository repo)
         {
-            db = context;
+            db = repo;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Index()
+        [HttpGet("Clients")]
+        public async Task<IActionResult> GetClients()
         {
-            // Get associated with logged user clients (fro developer) or all clients (for Admin)
-            var clients = await UserServices.GetUserClients(db, User);
+            // Get associated with logged user clients (for developer) or all clients (for Admin)
+            var loggedInUser = await db.GetUserByEmail(User.Identity.Name);
+            var clients = await db.GetUserClients(loggedInUser.Id);
+
+            return new JsonResult(clients);
+        }
+
+        [HttpGet("Clients/{id}")]
+        public async Task<IActionResult> GetClient(Guid id)
+        {
+            var client = await db.GetClientById(id);
+           
+
+            if (client.Developer.Email == User.Identity.Name)
+            {
+                client.UserRole.Users = null;
+                client.Developer.UserRole.Users = null;
+                return new JsonResult(client, new JsonSerializerSettings() { });
+            }
+            else
+            {
+                return Unauthorized();
+            }
             
-            return View(clients);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Create()
-        {
-            // Get list of all developers (for Admin role) or just logged developer for developer role
-            var developers = await UserServices.GetDevelopers(db, User);
-            ViewBag.Developers = developers;
-            
-            return View();
-        }
-       
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string clientName, string developerGuid)
+        [HttpPost("Clients")]        
+        public async Task<IActionResult> CreateClient([FromBody]ClientCreateModel model)
         {
             // Check client name
-            if(String.IsNullOrEmpty(clientName))
+            if(String.IsNullOrEmpty(model.ClientName))
             {
-                ModelState.AddModelError("Developer", "Client name cannot be empty");
-                var developers = await UserServices.GetDevelopers(db, User);
-                ViewBag.Developers = developers;
-                return View();
+                ModelState.AddModelError("ClientName", "Client name cannot be empty");                
+                return BadRequest(ModelState);
             }
-
-            // Create unique GUID
-            var newUserGuid = String.Empty;
-            do
+            if((await db.GetAllClients()).FirstOrDefault(c => c.Name == model.ClientName) != null)
             {
-                newUserGuid = Guid.NewGuid().ToString();
+                ModelState.AddModelError("ClientName", "Client with the same name already exists");
+                return BadRequest(ModelState);
             }
-            while (await db.Users.FirstOrDefaultAsync(x => x.UserId == newUserGuid) != null);
-
-            AddNewClientToDb(newUserGuid, clientName, developerGuid);
+            var currentUser = await db.GetUserByEmail(User.Identity.Name);
             
-            return RedirectToAction(nameof(Index));
+            var newClient = new Client()
+            {
+                Name = model.ClientName,
+                UserRole = await db.GetUserRoleByName("Client"),
+                Developer = currentUser
+            };
+          
+            newClient = await db.AddAndSave(newClient);
+                        
+            return Created(Url.Content($"~/api/Clients/{newClient.Id}"), newClient);
            
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(string id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            // Get list of all developers (for Admin role) or just logged developer for developer role
-            var developers = await UserServices.GetDevelopers(db, User);
-            ViewBag.Developers = developers;
-
-            // Get client by id
-            var client = await db.Clients.Include(x => x.User).SingleOrDefaultAsync(m => m.ClientId == id);
-            if (client == null)
-            {
-                return NotFound();
-            }
-            
-            return View(client);
-        }
+        }      
        
-        [HttpPost]        
-        public async Task<IActionResult> Edit(string id, Client client)
+        [HttpPut("Clients")]        
+        public async Task<IActionResult> Edit([FromBody]Client client)
         {
-            if (id != client.ClientId)
-            {
-                return NotFound();
-            }
-
             if (ModelState.IsValid)
             {
                 try
                 {
-                    db.Update(client);
-                    await db.SaveChangesAsync();
+                    await db.UpdateAndSave(client);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ClientExists(client.ClientId))
+                    if (!await db.ClientExists(client.Id))
                     {
                         return NotFound();
                     }
@@ -116,82 +102,28 @@ namespace RemoteLoggingService.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return NoContent();
             }
-            
-            return View(client);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Delete(string id)
-        {
-            if (id == null)
+            else
             {
-                return NotFound();
+                return BadRequest(ModelState);
             }
-
-            var client = await db.Clients
-                .Include(c => c.User)
-                .SingleOrDefaultAsync(m => m.ClientId == id);
+        }      
+        
+        [HttpDelete("Clients/{id}")]        
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            // Get Entity from users and clients tables
+            var client = await db.GetClientById(id);
             if (client == null)
             {
                 return NotFound();
             }
 
-            return View(client);
-        }
-        
-        [HttpPost, ActionName("Delete")]        
-        public async Task<IActionResult> DeleteConfirmed(string id)
-        {
-            // Get Entity from users and clients tables
-            var client = await db.Clients.SingleOrDefaultAsync(m => m.ClientId == id);
-            var user = await db.Users.SingleOrDefaultAsync(x => x.UserId == id);
-
-            // Delete client first
-            db.Clients.Remove(client);
-            await db.SaveChangesAsync();
-
             // Delete user
-            db.Users.Remove(user);
-            await db.SaveChangesAsync();
+            await db.DeleteAndSave(client);            
 
-            return RedirectToAction(nameof(Index));
+            return Ok();
         }
-
-        private bool ClientExists(string id)
-        {
-            return db.Clients.Any(e => e.ClientId == id);
-        }
-
-        private void AddNewClientToDb(string clientGuid, string clientName, string developerGuid)
-        {
-            // Get connection string
-            var settingsText = System.IO.File.ReadAllText(@"appsettings.json");
-            var connectionString = JsonConvert.DeserializeObject<AppSettings>(settingsText).ConnectionStrings.DefaultConnection;            
-
-            // Execute stored procedure
-            using (var connection = new SqlConnection(connectionString))
-            {
-                // Stored procedure name
-                var command = new SqlCommand("AddNewClient", connection);
-                command.CommandType = System.Data.CommandType.StoredProcedure;
-
-                command.Parameters.AddWithValue("@ClientGuid", clientGuid);
-                command.Parameters.AddWithValue("@DeveloperGuid", developerGuid);
-                command.Parameters.AddWithValue("@ClientName", clientName);
-                command.Parameters.Add("@Result", System.Data.SqlDbType.NVarChar, 100).Direction = System.Data.ParameterDirection.Output;
-                connection.Open();
-                command.ExecuteNonQuery();
-
-                // Check result
-                if(!String.IsNullOrEmpty(command.Parameters["@Result"].Value.ToString()))
-                {
-                    throw new Exception("Add new user exception: " + command.Parameters["@Result"].Value.ToString());
-                }
-
-            }
-        }
-
     }
 }

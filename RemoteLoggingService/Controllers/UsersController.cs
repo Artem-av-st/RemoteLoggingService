@@ -1,67 +1,42 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RemoteLoggingService.Models;
 
 namespace RemoteLoggingService.Controllers
 {
-    [Authorize(Roles ="Admin")]
+    //[Authorize(Roles ="Admin")]
     public class UsersController : Controller
     {
-        private readonly AppDbContext db;
-
-        public UsersController(AppDbContext context)
-        {
-            db = context;
+        private readonly IRepository db;
+        
+        public UsersController(IRepository repo)
+        {        
+            db = repo;
         }
 
         [HttpGet]
         public async Task<IActionResult> Index()
-        {
+        {            
             // Get list of all developers and admins
-            var users = await db.Users.Include(u => u.UserRole).Where(x => x.UserRole.Name!="Client").ToListAsync();
-            return View(users);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Edit(string id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await db.Users.SingleOrDefaultAsync(m => m.UserId == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            var roles = await db.UserRoles.Where(x => x.Name!= "Client").ToListAsync();
-            ViewBag.Roles = roles;
-            return View(user);
+            var users = (await db.GetAllUsers()).Where(x => x.UserRole.Name!="Client").ToList();            
+            return new JsonResult(users);           
         }
         
         [HttpPost]        
-        public async Task<IActionResult> Edit(string id, User user)
-        {
-            if (id != user.UserId)
-            {
-                return NotFound();
-            }       
-            
+        public async Task<IActionResult> Edit(User user)
+        {   
             if (ModelState.IsValid)
             {
                 try
                 {
-                    db.Update(user);
-                    await db.SaveChangesAsync();
+                    await db.UpdateAndSave(user);                    
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!UserExists(user.UserId))
+                    if (!await db.UserExists(user.Id))
                     {
                         return NotFound();
                     }
@@ -73,39 +48,17 @@ namespace RemoteLoggingService.Controllers
                 return RedirectToAction(nameof(Index));
             }
             
-            return View(user);
+            return NotFound();
         }
-
-        [HttpGet]
-        public async Task<IActionResult> Delete(string id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var user = await db.Users.Include(u => u.UserRole).SingleOrDefaultAsync(m => m.UserId == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
-
         
-        [HttpPost, ActionName("Delete")]        
-        public async Task<IActionResult> DeleteConfirmed(string id)
+        [HttpDelete]        
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var user = await db.Users.SingleOrDefaultAsync(m => m.UserId == id);
-            db.Users.Remove(user);
-            await db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool UserExists(string id)
-        {
-            return db.Users.Any(e => e.UserId == id);
-        }
+            var user = db.GetUserById(id);
+            if(user == null)
+                return StatusCode(204);
+            await db.DeleteAndSave(user);
+            return StatusCode(200);
+        }       
     }
 }

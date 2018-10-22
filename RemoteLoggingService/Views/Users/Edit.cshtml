@@ -24,7 +24,7 @@
         @using (@Html.BeginForm("Edit", "Users", FormMethod.Post))
         {
             // Hidden fields
-            @Html.HiddenFor(model => model.UserId)
+            @Html.HiddenFor(model => model.Id)
            
             @Html.HiddenFor(model => model.Password)
             
@@ -51,7 +51,7 @@
                 @Html.Label("User role")
             </div>
             <div class="editor-field">
-                @Html.DropDownListFor(model => model.RoleId, userRoles)                
+                @Html.DropDownListFor(model => model.UserRole.Id, userRoles)                
             </div>
 
             // Is approved

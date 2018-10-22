@@ -17,8 +17,8 @@ namespace RemoteLoggingService.Controllers
 
     public class AccountController : Controller
     {
-        private AppDbContext db;
-        public AccountController(AppDbContext context)
+        private IRepository db;
+        public AccountController(IRepository context)
         {
             db = context;
         }
@@ -34,16 +34,16 @@ namespace RemoteLoggingService.Controllers
         [HttpPost]       
         public async Task<IActionResult> Login(LoginModel model)
         {            
-            if(!Captcha.CheckCaptcha(Request))
-            {
-                ModelState.AddModelError("Captcha", "Captcha is invalid.");
-                return View();
-            }
+            //if(!Captcha.CheckCaptcha(Request))
+            //{
+            //    ModelState.AddModelError("Captcha", "Captcha is invalid.");
+            //    return View();
+            //}
 
             if (ModelState.IsValid)
             {        
                 // Get user from DB
-                User user = await db.Users.Include(x => x.UserRole).FirstOrDefaultAsync(u => u.Email == model.Email);
+                User user = (await db.GetAllUsers()).FirstOrDefault(u => u.Email == model.Email);
 
                 // Check if credentials are correct
                 if (user != null && Security.CheckPassword(model.Password, user.Password))
@@ -53,7 +53,7 @@ namespace RemoteLoggingService.Controllers
                     {
                         // Check user role (Admin or Dev)
                         await Authenticate(model.Email, user.UserRole.Name=="Admin");
-                        return RedirectToAction(nameof(MonitoringController.Index), "Monitoring");
+                        return new JsonResult("Test");
                     }
                     else
                     {
@@ -78,31 +78,33 @@ namespace RemoteLoggingService.Controllers
         [HttpPost]        
         public async Task<IActionResult> Register(RegisterModel model)
         {
-            if (!Captcha.CheckCaptcha(Request))
-            {
-                ModelState.AddModelError("Captcha", "Captcha is invalid.");
-                return View(model);
-            }
+            //if (!Captcha.CheckCaptcha(Request))
+            //{
+            //    ModelState.AddModelError("Captcha", "Captcha is invalid.");
+            //    return View(model);
+            //}
             if (ModelState.IsValid)
             {
                 // Check if user with the same email already exists in DB
-                User user = await db.Users.FirstOrDefaultAsync(u => u.Email == model.Email);
+                User user = (await db.GetAllUsers()).FirstOrDefault(u => u.Email == model.Email);
                 if (user == null)
                 {
                     var hashedPassword = Security.GetHashedPassword(model.Password);
 
-                    // Get developer RoleId
-                    var roleId = db.UserRoles.FirstOrDefault(x => x.Name == "Developer").Id;
+                    // Get developer Role
+                    var role = await db.GetUserRoleByName("Developer");
                     // Add new user to DB
-                    db.Users.Add(new User { Email = model.Email, Password = hashedPassword, UserId = Guid.NewGuid().ToString(), RoleId=roleId, Name = model.Name});
-                    await db.SaveChangesAsync();
-                   
+                    await db.AddAndSave(new User { Email = model.Email, Password = hashedPassword, UserRole = role, Name = model.Name });
+
                     return RedirectToAction(nameof(AccountController.Login), "Account");
                 }
                 else
+                {
                     ModelState.AddModelError("Email", "User with the same email already exists");
+                    return BadRequest(ModelState);
+                }
             }
-            return View(model);
+            return BadRequest(ModelState);
         }
 
         private async Task Authenticate(string userName, bool isAdmin)
@@ -113,15 +115,8 @@ namespace RemoteLoggingService.Controllers
                 new Claim(ClaimsIdentity.DefaultNameClaimType, userName)
                 
             };
-            var role = String.Empty;
-            if(isAdmin)
-            {
-                role = "Admin";
-            }
-            else
-            {
-                role = "Developer";
-            }
+            var role = isAdmin ? "Admin" : "Developer";
+            
             // User role claim
             claims.Add(new Claim(ClaimsIdentity.DefaultRoleClaimType, role));
 

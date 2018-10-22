@@ -2,7 +2,7 @@
 
 namespace RemoteLoggingService.Services
 {
-    public static class StringExtensions
+    public static class Extensions
     {
         public static bool CustomContains(this string str, string substring)
         {

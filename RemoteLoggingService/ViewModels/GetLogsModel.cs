@@ -6,6 +6,7 @@ namespace RemoteLoggingService.ViewModels
     public class GetLogsModel
     {
         [Display(Name = "Client Name")]
+        [Required]
         public string ClientName { get; set; }
 
         [Display(Name = "Get logs from date")]

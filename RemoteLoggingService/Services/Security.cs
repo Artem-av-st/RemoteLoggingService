@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace RemoteLoggingService.Services
 {
-    internal static class Security
+    public static class Security
     {
         public static string GetHashedPassword(string password)
         {
@@ -20,8 +20,7 @@ namespace RemoteLoggingService.Services
             Array.Copy(salt, 0, hashBytes, 0, 16);
             Array.Copy(hash, 0, hashBytes, 16, 20);
             
-            return Convert.ToBase64String(hashBytes);
-           
+            return Convert.ToBase64String(hashBytes);           
         }
 
         public static bool CheckPassword(string password, string storedPasswordHash)

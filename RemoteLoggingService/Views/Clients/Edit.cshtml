@@ -22,16 +22,16 @@
         @using (@Html.BeginForm("Edit", "Clients", FormMethod.Post))
         {
             
-            @Html.HiddenFor(model => model.ClientId)
+            @Html.HiddenFor(model => model.Id)
              
             <div class="editor-field">
                 @Html.Label("Client")
-                @Html.DisplayFor(model => model.User.Name)
+                @Html.DisplayFor(model => model.Name)
             </div>
 
             <div class="editor-field">
                 @Html.LabelFor(model => model.Developer)
-                @Html.DropDownListFor(model => model.DeveloperId, develpopersList)
+                @Html.DropDownListFor(model => model.Developer.Id, develpopersList)
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-default" />

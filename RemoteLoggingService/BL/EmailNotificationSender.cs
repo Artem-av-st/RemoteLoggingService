@@ -1,12 +1,11 @@
 ﻿using RemoteLoggingService.Services.ViewModels;
-using AusCommonLibraries.Notifications;
 using Newtonsoft.Json;
 using RemoteLoggingService.BL.Interfaces;
 using RemoteLoggingService.Models;
 using System;
 using System.IO;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using RemoteLoggingService.Notifications;
 
 namespace RemoteLoggingService.Services
 {
@@ -38,16 +37,16 @@ namespace RemoteLoggingService.Services
              );
         }
         
-        public bool Notify(Log message, AppDbContext db)
+        public async Task<bool> Notify(Log message, IRepository db)
         {
             try
             {
-                string developerEmail = db.Clients.Include(x => x.Developer).SingleOrDefault(x => x.ClientId == message.ClientGuid).Developer.Email;
+                string developerEmail = (await db.GetClientById(message.ClientId)).Developer.Email;
                 if (String.IsNullOrEmpty(developerEmail))
                 {
                     return false;
                 }
-                string clientName = db.Clients.Include(x => x.User).SingleOrDefault(x => x.ClientId == message.ClientGuid).User.Name;
+                string clientName = (await db.GetClientById(message.ClientId)).Name;
                 if (String.IsNullOrEmpty(clientName))
                 {
                     return false;
